@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070B16">
+<meta name="color-scheme" content="dark">
+<title>EGO — Yacine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#070B16;--deep:#0B1326;--panel:#101B33;--panel2:#152543;--line:#22335A;
+  --electric:#3B8DFF;--cyan:#5CE0FF;--magenta:#FF4D86;--magenta-soft:#FF82AC;
+  --gold:#FFC247;--gold-soft:#FFD77A;--ice:#EDF3FF;--mute:#8497C2;
+  --lock-bg:#0C1426;--lock-stroke:#1E2C4C;--lock-text:#5E72A0;
+  --disp:'Sora',system-ui,sans-serif;--body:'Inter',system-ui,-apple-system,sans-serif;
+  --r:14px;--r-lg:20px;--r-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;background:var(--void)}
+body{font-family:var(--body);color:var(--ice);line-height:1.6;background:var(--void);margin:0}
+/* reliable dark canvas: a real painted container, not just body */
+.app{position:relative;min-height:100vh;width:100%;overflow:hidden;
+  background:radial-gradient(1000px 640px at 50% -8%,rgba(59,141,255,.18),transparent 58%),radial-gradient(760px 520px at 88% 16%,rgba(255,77,134,.09),transparent 58%),var(--void);
+  padding:clamp(18px,4vw,40px) clamp(14px,3.4vw,30px) 74px}
+.app::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(59,141,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(59,141,255,.05) 1px,transparent 1px);
+  background-size:48px 48px;-webkit-mask-image:radial-gradient(circle at 50% 22%,#000,transparent 72%);mask-image:radial-gradient(circle at 50% 22%,#000,transparent 72%)}
+.wrap{max-width:920px;margin:0 auto;position:relative;z-index:1}
+
+.eyebrow{font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--cyan)}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(28px,6.6vw,44px);line-height:1.04;letter-spacing:-.01em;margin-top:7px;color:var(--ice)}
+h1 .a{color:var(--electric)}
+.tagline{color:var(--mute);font-size:14.5px;margin-top:9px}
+
+.nav{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0 26px}
+.tab{font-family:var(--disp);font-weight:600;font-size:14px;color:var(--mute);background:rgba(255,255,255,.02);border:1px solid var(--line);cursor:pointer;padding:9px 17px;border-radius:999px;transition:.16s}
+.tab:hover{color:var(--ice);border-color:var(--mute)}
+.tab.on{color:#08101f;background:linear-gradient(100deg,var(--electric),var(--cyan));border-color:transparent;box-shadow:0 4px 20px rgba(92,224,255,.32)}
+.tab.gold{color:var(--gold-soft);border-color:rgba(255,194,71,.35);background:rgba(255,194,71,.05)}
+.tab.gold:hover{border-color:var(--gold)}
+.tab.gold.on{color:#1c1402;background:linear-gradient(100deg,var(--gold),var(--gold-soft));border-color:transparent;box-shadow:0 4px 20px rgba(255,194,71,.4)}
+.tab .ti{display:inline-flex;vertical-align:-2px;margin-right:5px}
+
+.view{display:none;animation:fade .34s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.section-h{font-family:var(--disp);font-weight:600;font-size:18px;color:var(--ice);margin:0 0 4px}
+.section-s{color:var(--mute);font-size:14px;margin-bottom:18px}
+
+.meter{margin:0 0 22px;max-width:540px}
+.meter__top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.meter__label{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--mute)}
+.meter__val{font-family:var(--disp);font-weight:700;font-size:25px;color:var(--cyan)}
+.meter__bar{height:9px;background:var(--lock-bg);border:1px solid var(--lock-stroke);border-radius:999px;overflow:hidden}
+.meter__fill{height:100%;width:0;background:linear-gradient(90deg,var(--electric),var(--cyan));border-radius:999px;box-shadow:0 0 14px rgba(92,224,255,.55);transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.meter__counts{font-size:12.5px;color:var(--mute);margin-top:10px}
+.meter__counts b{color:var(--ice);font-weight:500}
+
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 22px}
+.lg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute)}
+.lg .dot{width:12px;height:12px;border-radius:50%}
+.lg.awk .dot{background:var(--cyan);box-shadow:0 0 9px var(--cyan)}
+.lg.prog .dot{background:transparent;border:2px solid var(--magenta);box-shadow:0 0 7px rgba(255,77,134,.5)}
+.lg.lock .dot{background:var(--lock-bg);border:2px solid var(--lock-stroke)}
+
+/* CORE + BRAIN */
+.core-zone{display:flex;flex-direction:column;align-items:center;text-align:center;margin:6px 0 32px}
+.core{display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;
+  width:min(330px,86vw);padding:22px 24px 20px;border-radius:var(--r-lg);border:1px solid rgba(59,141,255,.32);
+  background:radial-gradient(120% 120% at 50% 0%,rgba(59,141,255,.14),transparent 60%),linear-gradient(165deg,var(--panel2),var(--deep));
+  color:inherit;font-family:inherit;box-shadow:0 0 44px rgba(59,141,255,.24);animation:glowPulse 4s ease-in-out infinite;overflow:hidden}
+.core:hover,.core:focus-visible{box-shadow:0 0 60px rgba(92,224,255,.4);border-color:var(--cyan);outline:none}
+.brain{width:150px;height:auto;display:block;filter:drop-shadow(0 0 14px rgba(92,224,255,.55))}
+.brain .o{fill:rgba(59,141,255,.10);stroke:var(--cyan);stroke-width:2.4;stroke-linejoin:round}
+.brain .f{fill:none;stroke:var(--cyan);stroke-width:1.7;stroke-linecap:round;opacity:.85}
+.brain .syn{fill:var(--magenta-soft);animation:syn 2.6s ease-in-out infinite}
+.brain .syn:nth-child(7){animation-delay:.5s}.brain .syn:nth-child(8){animation-delay:1s;fill:var(--cyan)}.brain .syn:nth-child(9){animation-delay:1.6s}
+.core-label{margin-top:8px}
+.core__k{font-family:var(--disp);font-weight:700;font-size:24px;letter-spacing:.06em;display:block;text-shadow:0 0 16px rgba(92,224,255,.5)}
+.core__t{font-size:12.5px;color:var(--cyan);letter-spacing:.04em;margin-top:1px}
+.core-tags{margin-top:12px;font-size:13px;color:var(--mute)}
+.core-tags b{color:var(--ice);font-weight:500}
+
+/* TREE */
+.tree{display:grid;grid-template-columns:repeat(auto-fit,minmax(244px,1fr));gap:24px 20px}
+.branch__head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.branch__idx{font-family:var(--disp);font-weight:700;font-size:15px;color:var(--electric);width:30px;height:30px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:rgba(59,141,255,.1);border:1px solid rgba(59,141,255,.38);border-radius:9px}
+.branch__name{font-family:var(--disp);font-weight:600;font-size:16.5px;color:var(--ice)}
+.nodes{position:relative;padding-left:24px}
+.nodes::before{content:"";position:absolute;left:8px;top:6px;bottom:16px;width:2px;border-radius:2px;background:linear-gradient(180deg,var(--cyan),var(--electric) 26%,var(--line) 62%,var(--lock-stroke))}
+.node{position:relative;display:block;width:100%;text-align:left;cursor:pointer;font-family:inherit;color:inherit;margin-bottom:10px;padding:11px 14px;border-radius:var(--r);border:1px solid var(--line);
+  background:linear-gradient(165deg,var(--panel),var(--deep));transition:transform .17s ease,box-shadow .17s ease,border-color .17s ease}
+.node::before{content:"";position:absolute;left:-21px;top:50%;width:14px;height:2px;background:var(--line)}
+.node::after{content:"";position:absolute;left:-25px;top:50%;transform:translateY(-50%);width:10px;height:10px;border-radius:50%;background:var(--lock-bg);border:2px solid var(--lock-stroke)}
+.node:hover,.node:focus-visible{transform:translateX(4px);outline:none}
+.node__top{display:flex;align-items:center;gap:9px;justify-content:space-between}
+.node__name{font-family:var(--disp);font-weight:600;font-size:15.5px;line-height:1.2}
+.node__ic{flex:0 0 auto;display:flex}.node__ic svg{display:block}
+.node__pct{font-family:var(--disp);font-weight:700;font-size:14.5px}
+.node__bar{height:4px;margin-top:8px;background:rgba(255,77,134,.16);border-radius:999px;overflow:hidden}
+.node__bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--magenta),var(--magenta-soft));box-shadow:0 0 7px rgba(255,77,134,.55)}
+.node--awk{border-color:rgba(59,141,255,.5);box-shadow:0 0 16px rgba(59,141,255,.15)}
+.node--awk .node__ic{color:var(--cyan);filter:drop-shadow(0 0 4px rgba(92,224,255,.8))}
+.node--awk::after{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 9px var(--cyan)}
+.node--awk::before{background:linear-gradient(90deg,var(--line),var(--cyan))}
+.node--prog{border-color:rgba(255,77,134,.38)}
+.node--prog .node__name{color:#FFE7EF}
+.node--prog .node__pct{color:var(--magenta-soft)}
+.node--prog::after{background:transparent;border-color:var(--magenta);box-shadow:0 0 7px rgba(255,77,134,.5)}
+.node--prog::before{background:linear-gradient(90deg,var(--line),var(--magenta))}
+.node--lock{background:var(--lock-bg);border-color:var(--lock-stroke)}
+.node--lock .node__name{color:var(--lock-text);font-weight:500}
+.node--lock .node__ic{color:var(--lock-text)}
+.node--lock:hover .node__name{color:#90a6d4}
+
+/* CARDS blocs/rappels */
+.card-block{background:linear-gradient(165deg,var(--panel),var(--deep));border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:18px;padding:18px 19px 16px}
+.card-block h3{font-family:var(--disp);font-weight:700;font-size:18.5px;color:var(--ice);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-block .dur{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--cyan)}
+.keyline{margin:12px 0;padding:11px 14px;background:rgba(92,224,255,.06);border-left:3px solid var(--cyan);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:14px;color:#CFE3FF}
+.keyline.mag{background:rgba(255,77,134,.06);border-left-color:var(--magenta)}
+.keyline b{color:var(--cyan);font-weight:500}.keyline.mag b{color:var(--magenta-soft)}
+.steps{list-style:none;margin:10px 0 0;counter-reset:s}
+.steps li{position:relative;padding:9px 0 9px 36px;border-top:1px solid rgba(34,51,90,.6);font-size:14px;color:#C7D5F2}
+.steps li:first-child{border-top:none}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:9px;width:24px;height:24px;font-family:var(--disp);font-weight:700;font-size:12px;color:var(--electric);display:flex;align-items:center;justify-content:center;background:rgba(59,141,255,.1);border:1px solid rgba(59,141,255,.32);border-radius:8px}
+.steps li b{color:var(--ice);font-weight:500}
+.steps .t{font-family:var(--disp);font-weight:600;font-size:14.5px;color:var(--ice)}
+.bullets{margin:6px 0 0;padding-left:18px;font-size:14px;color:#C7D5F2}.bullets li{margin:5px 0}
+
+/* report / IA */
+.keybox{margin-bottom:18px;padding:14px 16px;border-radius:var(--r);background:rgba(92,224,255,.05);border:1px solid var(--line)}
+.keybox__l{display:block;font-family:var(--disp);font-weight:600;font-size:12.5px;color:var(--cyan);margin-bottom:8px}
+.keybox__row{display:flex;gap:9px}
+.keybox input{flex:1;min-width:0;background:var(--lock-bg);border:1px solid var(--line);border-radius:var(--r-sm);color:var(--ice);font-family:var(--body);font-size:14px;padding:10px 12px}
+.keybox input:focus{outline:none;border-color:var(--electric)}
+.keybox input::placeholder{color:#566c98}
+.keybox__btn{font-family:var(--disp);font-weight:700;font-size:14px;color:#08101f;background:linear-gradient(100deg,var(--electric),var(--cyan));border:none;cursor:pointer;padding:0 18px;border-radius:var(--r-sm)}
+.keybox__status{font-size:12.5px;color:var(--mute);margin-top:8px}
+.keybox__status.ok{color:var(--cyan)}
+.io textarea{width:100%;min-height:122px;background:var(--lock-bg);border:1px solid var(--line);border-radius:var(--r);color:var(--ice);font-family:var(--body);font-size:15px;line-height:1.6;padding:13px 15px;resize:vertical}
+.io textarea:focus{outline:none;border-color:var(--electric);box-shadow:0 0 0 3px rgba(59,141,255,.15)}
+.io textarea::placeholder{color:#566c98}
+.btn{margin-top:14px;font-family:var(--disp);font-weight:700;font-size:15px;color:#08101f;background:linear-gradient(100deg,var(--electric),var(--cyan));border:none;cursor:pointer;padding:13px 24px;border-radius:999px;box-shadow:0 4px 22px rgba(92,224,255,.32);transition:.15s;display:inline-flex;align-items:center;gap:9px}
+.btn:hover{box-shadow:0 6px 30px rgba(92,224,255,.5)}
+.btn:disabled{opacity:.55;cursor:wait;box-shadow:none}
+.btn .spin{width:15px;height:15px;border:2px solid rgba(8,16,31,.35);border-top-color:#08101f;border-radius:50%;animation:rot .7s linear infinite;display:none}
+.btn.loading .spin{display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+.report{margin-top:22px;display:none}.report.show{display:block;animation:fade .4s ease}
+.report__box{background:linear-gradient(165deg,var(--panel2),var(--deep));border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 20px 18px;box-shadow:0 0 38px rgba(59,141,255,.16)}
+.report__tag{font-family:var(--disp);font-weight:700;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--magenta-soft);margin-bottom:10px;display:flex;align-items:center;gap:9px}
+.report__tag .l{flex:1;height:1px;background:linear-gradient(90deg,var(--magenta),transparent)}
+.report__txt{font-size:15.5px;line-height:1.7;color:#E6EFFF}
+.unlock-banner{margin-top:16px;padding:14px 16px;border-radius:var(--r);background:radial-gradient(120% 120% at 0% 0%,rgba(255,194,71,.16),transparent 60%),rgba(255,194,71,.06);border:1px solid rgba(255,194,71,.45);display:flex;align-items:center;gap:12px;animation:goldIn .5s ease}
+.unlock-banner .ub-ic{color:var(--gold);flex:0 0 auto;filter:drop-shadow(0 0 8px rgba(255,194,71,.6))}
+.unlock-banner .ub-t{font-family:var(--disp);font-weight:700;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-soft)}
+.unlock-banner .ub-n{font-family:var(--disp);font-weight:700;font-size:18px;color:#fff}
+@keyframes goldIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.report__focus{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:14px;color:#CFE3FF}
+.report__focus b{font-family:var(--disp);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);display:block;margin-bottom:5px}
+.updates{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+.upd{font-family:var(--disp);font-weight:600;font-size:12.5px;padding:5px 12px;border-radius:999px;background:rgba(92,224,255,.1);border:1px solid rgba(92,224,255,.32);color:var(--cyan);display:flex;align-items:center;gap:6px}
+.upd .ar{color:var(--mute)}
+.err{margin-top:18px;padding:13px 15px;background:rgba(255,77,134,.08);border:1px solid rgba(255,77,134,.32);border-radius:var(--r);color:var(--magenta-soft);font-size:14px;display:none}
+.err.show{display:block}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:10px;margin:0 0 8px}
+.stat{background:var(--lock-bg);border:1px solid var(--line);border-radius:var(--r);padding:13px 10px;text-align:center}
+.stat .v{font-family:var(--disp);font-weight:700;font-size:26px;color:var(--cyan);line-height:1}
+.stat.gap .v{color:var(--magenta-soft)}
+.stat .l{font-family:var(--disp);font-weight:600;font-size:11px;color:var(--mute);margin-top:6px}
+.hist{margin-top:14px}
+.hist__item{padding:11px 0;border-top:1px solid rgba(34,51,90,.6);font-size:13.5px;color:#BCCBEA}.hist__item:first-child{border-top:none}
+.hist__d{font-family:var(--disp);font-weight:600;font-size:11.5px;color:var(--electric);margin-bottom:3px}
+.empty{color:var(--mute);font-size:13.5px;font-style:italic;padding:10px 0}
+
+/* LEGENDS */
+.leg-intro{padding:14px 16px;border-radius:var(--r);background:radial-gradient(140% 140% at 0% 0%,rgba(255,194,71,.1),transparent 60%),rgba(255,194,71,.04);border:1px solid rgba(255,194,71,.28);color:#E9DFC4;font-size:14px;margin-bottom:20px}
+.leg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.leg{position:relative;cursor:pointer;text-align:center;padding:18px 12px 16px;border-radius:var(--r-lg);border:1px solid var(--lock-stroke);background:linear-gradient(165deg,var(--lock-bg),#080f1e);font-family:inherit;color:inherit;transition:.18s;overflow:hidden}
+.leg:hover{transform:translateY(-3px);border-color:#2a3a5e}
+.crest{width:58px;height:58px;margin:0 auto 10px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;font-size:20px;position:relative}
+.leg__name{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--lock-text)}
+.leg__style{font-size:11.5px;color:#46577d;margin-top:2px}
+.leg .lk{position:absolute;top:10px;right:11px;color:var(--lock-text)}
+.leg.unlocked{border-color:rgba(255,194,71,.5);background:radial-gradient(130% 130% at 50% 0%,rgba(255,194,71,.12),transparent 60%),linear-gradient(165deg,var(--panel),var(--deep));box-shadow:0 0 30px rgba(255,194,71,.16)}
+.leg.unlocked:hover{box-shadow:0 0 40px rgba(255,194,71,.28);transform:translateY(-3px)}
+.leg.unlocked .leg__name{color:#fff}
+.leg.unlocked .leg__style{color:var(--gold-soft)}
+.leg.unlocked .lk{color:var(--gold)}
+.leg.unlocked .crest{box-shadow:0 0 18px rgba(255,194,71,.3)}
+
+/* overlay */
+.overlay{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(5,8,16,.76);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;visibility:hidden;transition:.22s}
+.overlay.show{opacity:1;visibility:visible}
+.ocard{width:min(480px,100%);max-height:88vh;overflow-y:auto;background:linear-gradient(165deg,var(--panel2),var(--deep));border:1px solid var(--line);border-radius:var(--r-lg);position:relative;padding:24px 22px 26px;box-shadow:0 0 56px rgba(59,141,255,.25);transform:translateY(12px) scale(.98);transition:transform .26s cubic-bezier(.2,.8,.2,1)}
+.overlay.show .ocard{transform:none}
+.ocard.gold{border-color:rgba(255,194,71,.45);box-shadow:0 0 56px rgba(255,194,71,.22)}
+.ocard__close{position:absolute;top:14px;right:14px;width:34px;height:34px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--mute);cursor:pointer;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:.15s;z-index:2}
+.ocard__close:hover{color:var(--ice);border-color:var(--mute)}
+.ocard__tag{font-family:var(--disp);font-weight:600;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--electric);margin-bottom:8px}
+.ocard__name{font-family:var(--disp);font-weight:700;font-size:clamp(22px,5.4vw,28px);line-height:1.08;margin-bottom:13px;padding-right:30px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:.06em;padding:5px 12px;border-radius:999px;margin-bottom:15px}
+.badge--awk{background:rgba(92,224,255,.12);color:var(--cyan);border:1px solid rgba(92,224,255,.4)}
+.badge--prog{background:rgba(255,77,134,.12);color:var(--magenta-soft);border:1px solid rgba(255,77,134,.4)}
+.badge--lock{background:rgba(94,114,160,.12);color:var(--lock-text);border:1px solid var(--lock-stroke)}
+.ocard__bar{height:7px;background:rgba(255,77,134,.14);border-radius:999px;overflow:hidden;margin-bottom:15px}
+.ocard__bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--magenta),var(--magenta-soft));box-shadow:0 0 9px rgba(255,77,134,.55);transition:width .7s ease .1s}
+.ocard__desc{color:#C7D5F2;font-size:15px;line-height:1.62}
+.ocard__unlock{margin-top:15px;padding-top:13px;border-top:1px solid var(--line);font-size:13px;color:var(--mute)}
+.ocard__unlock b{color:var(--electric);font-weight:500;font-family:var(--disp);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:4px}
+/* legend detail */
+.lego-head{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.lego-crest{width:58px;height:58px;flex:0 0 auto;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;font-size:20px}
+.lego-sub{font-family:var(--disp);font-weight:600;font-size:12.5px;color:var(--gold-soft);margin-top:3px}
+.lego-block{margin-top:14px}
+.lego-block .lab{font-family:var(--disp);font-weight:700;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.lego-block p{font-size:14.5px;line-height:1.62;color:#DCE6F8}
+
+.foot{margin-top:38px;text-align:center;font-size:12px;color:var(--mute)}
+.foot b{color:var(--cyan);font-weight:500;font-family:var(--disp)}
+
+@keyframes glowPulse{0%,100%{box-shadow:0 0 36px rgba(59,141,255,.2)}50%{box-shadow:0 0 56px rgba(92,224,255,.4)}}
+@keyframes syn{0%,100%{opacity:.3;r:2}50%{opacity:1;r:3.4}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="wrap">
+  <span class="eyebrow">Projet Blue Lock</span>
+  <h1>EGO<span class="a">.</span> Yacine</h1>
+  <p class="tagline">Ton compagnon d'entraînement — ta progression se sauvegarde à chaque fois.</p>
+
+  <div class="nav">
+    <button class="tab on" data-v="arbre">Arbre</button>
+    <button class="tab" data-v="blocs">Blocs</button>
+    <button class="tab" data-v="rappels">Rappels</button>
+    <button class="tab" data-v="rapport">Rapport IA</button>
+    <button class="tab gold" data-v="legendes"><span class="ti">★</span>Légendes</button>
+  </div>
+
+  <div class="view on" id="v-arbre">
+    <div class="meter">
+      <div class="meter__top"><span class="meter__label">Progression globale</span><span class="meter__val" id="gpct">0%</span></div>
+      <div class="meter__bar"><div class="meter__fill" id="gfill"></div></div>
+      <div class="meter__counts" id="gcounts"></div>
+    </div>
+    <div class="legend">
+      <div class="lg awk"><span class="dot"></span>Éveillé</div>
+      <div class="lg prog"><span class="dot"></span>En cours</div>
+      <div class="lg lock"><span class="dot"></span>Verrouillé</div>
+    </div>
+    <div class="core-zone">
+      <button class="core" id="coreNode" aria-label="Noyau — le buteur créatif">
+        <svg class="brain" viewBox="0 0 200 150" aria-hidden="true">
+          <path class="o" d="M100 16 C75 6 49 12 42 33 C25 29 12 45 21 62 C10 73 13 92 28 97 C30 118 53 130 73 123 C85 135 115 135 127 123 C147 130 170 118 172 97 C187 92 190 73 179 62 C188 45 175 29 158 33 C151 12 125 6 100 16 Z"/>
+          <path class="f" d="M100 22 C95 52 105 80 99 120"/>
+          <path class="f" d="M60 40 C73 49 66 60 79 67"/>
+          <path class="f" d="M40 66 C57 67 50 81 67 86"/>
+          <path class="f" d="M52 102 C67 97 71 108 86 105"/>
+          <path class="f" d="M140 40 C127 49 134 60 121 67"/>
+          <path class="f" d="M160 66 C143 67 150 81 133 86"/>
+          <path class="f" d="M148 102 C133 97 129 108 114 105"/>
+          <circle class="syn" cx="79" cy="67" r="3"/>
+          <circle class="syn" cx="133" cy="86" r="3"/>
+          <circle class="syn" cx="99" cy="40" r="3"/>
+        </svg>
+        <div class="core-label"><span class="core__k">Noyau</span><span class="core__t">Le buteur créatif</span></div>
+      </button>
+      <div class="core-tags"><b>Instinct</b> · <b>Vision</b> · <b>Scan</b></div>
+    </div>
+    <div class="tree" id="tree"></div>
+  </div>
+
+  <div class="view" id="v-blocs">
+    <h2 class="section-h">Tes blocs d'entraînement</h2>
+    <p class="section-s">Suis-les étape par étape pendant ta séance.</p>
+    <div id="blocs"></div>
+  </div>
+
+  <div class="view" id="v-rappels">
+    <h2 class="section-h">Tes rappels — clés techniques</h2>
+    <p class="section-s">À relire avant de commencer. Ta phrase clé d'abord.</p>
+    <div id="rappels"></div>
+  </div>
+
+  <div class="view" id="v-rapport">
+    <h2 class="section-h">Rapport de séance</h2>
+    <p class="section-s">Raconte ta séance à EGO. Il te fait un rapport, met à jour ta progression — et peut débloquer une légende si tu le mérites.</p>
+    <div class="keybox">
+      <label class="keybox__l" for="apiKey">Clé API Gemini (gratuite — reste sur ton téléphone)</label>
+      <div class="keybox__row">
+        <input id="apiKey" type="password" placeholder="Colle ta clé (AIza…)" autocomplete="off" spellcheck="false">
+        <button class="keybox__btn" id="saveKey">OK</button>
+      </div>
+      <div class="keybox__status" id="keyStatus"></div>
+    </div>
+    <div class="io">
+      <textarea id="sessionInput" placeholder="Ex : Frappe au sol aujourd'hui. Mon gauche part enfin ferme quand je garde les orteils en bas. Jonglage : droit 4, gauche 2, alterné 5. Impatient sur la fin."></textarea>
+      <button class="btn" id="genBtn"><span class="spin"></span><span class="lbl">Générer le rapport</span></button>
+    </div>
+    <div class="err" id="errBox"></div>
+    <div class="report" id="report">
+      <div class="report__box">
+        <div class="report__tag">Rapport EGO<span class="l"></span></div>
+        <div class="report__txt" id="reportTxt"></div>
+        <div id="unlockBox"></div>
+        <div class="updates" id="updates"></div>
+        <div class="report__focus" id="reportFocus"></div>
+      </div>
+    </div>
+    <div style="margin-top:30px">
+      <h2 class="section-h">Tes chiffres</h2>
+      <p class="section-s">Jonglage — l'écart droit↔gauche est ta mesure d'ambidextrie.</p>
+      <div class="stats" id="stats"></div>
+      <div class="hist" id="hist"></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-legendes">
+    <h2 class="section-h">Salle des Légendes</h2>
+    <p class="section-s">Les cracks de Blue Lock. Tous verrouillés.</p>
+    <div class="leg-intro" id="legIntro"></div>
+    <div class="leg-grid" id="legends"></div>
+  </div>
+
+  <div class="foot">Forgé par <b>EGO</b> — propulsé par ta clé Gemini</div>
+</div>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="ocName">
+  <div class="ocard" id="ocard">
+    <button class="ocard__close" id="ocClose" aria-label="Fermer"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div id="ocBody"></div>
+  </div>
+</div>
+
+<script>
+const ICON={
+  lock:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2l2.1 7.4L21 12l-6.9 2.6L12 22l-2.1-7.4L3 12l6.9-2.6z"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10c.7.7 1 1.4 1 2h6c0-.6.3-1.3 1-2a6 6 0 0 0-4-10z"/></svg>',
+  target:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>'
+};
+const SL={awk:'Éveillé',prog:'En cours',lock:'Verrouillé'};
+function cleanRapport(t){if(!t)return '';t=String(t).trim();if(t.charAt(0)==='{'){const m=t.match(/"rapport"\s*:\s*"((?:[^"\\]|\\.)*)/);if(m&&m[1])return m[1].replace(/\\"/g,'"').replace(/\\n/g,' ').replace(/\\t/g,' ').trim();}return t;}
+
+const CORE={tag:'Noyau',name:'Le buteur créatif',s:'awk',
+  d:`Ton instinct, ta vision et ta lecture du jeu : tes armes de naissance. Ton cerveau est devant tes pieds. Tout l'arbre pousse à partir d'ici — chaque compétence débloquée donne à ce noyau une nouvelle façon de s'exprimer.`};
+
+const BASE=[
+ {name:'Contrôle',nodes:[
+   {id:'ctrl-volee',n:'Reprise de volée',s:'awk',d:`Ton point fort naturel. Le ballon en l'air ne te fait pas peur : contact franc, finition acrobatique.`},
+   {id:'ctrl-touche',n:'Première touche',s:'awk',d:`Reprise après rebond et contrôle au retour. Tu t'en sors très bien, et ça s'est encore amélioré.`},
+   {id:'ctrl-lever',n:'Lever de balle',s:'prog',p:60,d:`Décoller le ballon du sol pour enchaîner. Tu gagnes du temps et dépends moins de tes mains.`},
+   {id:'ctrl-jongle',n:'Jonglage ambidextre',s:'prog',p:25,d:`La coordination deux pieds est là ; le gauche reste le chantier.`},
+   {id:'ctrl-pression',n:'Contrôle orienté sous pression',s:'lock',d:`Recevoir et orienter dans la course, un adversaire au dos.`,u:`Première touche + jonglage solides`},
+   {id:'ctrl-amorti',n:'Amorti poitrine / cuisse',s:'lock',d:`Tuer un ballon aérien d'une autre surface que le pied.`,u:`Contrôle du pied maîtrisé`}
+ ]},
+ {name:'Frappe',nodes:[
+   {id:'frp-sol-d',n:'Frappe au sol — droit',s:'prog',p:45,d:`Ton droit est déjà pas mal : contact propre, ballon qui part bas.`},
+   {id:'frp-sol-g',n:'Frappe au sol — gauche',s:'prog',p:15,d:`Ton plus gros chantier. La clé que TU as trouvée : orteils en bas comme ta reprise, cheville raide, milieu du ballon.`},
+   {id:'frp-demivolee',n:'Demi-volée',s:'prog',p:30,d:`Frapper juste après le rebond. Le pont entre ta volée et ta frappe au sol.`},
+   {id:'frp-puissante',n:'Frappe puissante',s:'lock',d:`Ajouter de la vitesse, sur un contact déjà propre.`,u:`Frappe au sol propre des deux pieds`},
+   {id:'frp-enroule',n:'Tir enroulé (avec effet)',s:'lock',d:`Donner de la courbe pour contourner le gardien.`,u:`Frappe maîtrisée + intérieur du pied`},
+   {id:'frp-pique',n:'Lob / piqué',s:'lock',d:`Lober le gardien sorti, ballon piqué par-dessus.`,u:`Contrôle de la frappe`},
+   {id:'frp-exterieur',n:'Frappe de l\u2019extérieur',s:'lock',d:`Trajectoires imprévisibles avec l'extérieur du pied.`,u:`Conduite extérieur du pied`},
+   {id:'frp-retourne',n:'Retourné acrobatique',s:'lock',d:`Le geste spectaculaire : frapper en l'air, dos au but. Ta fibre acrobatique.`,u:`Volée maîtrisée + confiance`},
+   {id:'frp-loin',n:'Tir de loin',s:'lock',d:`Armer une frappe lourde de 20-25 m.`,u:`Frappe puissante`}
+ ]},
+ {name:'Dribble',nodes:[
+   {id:'drb-conduite',n:'Conduite de balle',s:'prog',p:10,d:`Pousser le ballon collé à ton pied en te déplaçant. Le geste le plus utile en match.`},
+   {id:'drb-maitrise',n:'Maîtrise au sol',s:'prog',p:15,d:`Rouler, pousser, garder le ballon sous contrôle. La base de tout le dribble.`},
+   {id:'drb-rythme',n:'Changement de rythme',s:'lock',d:`Ralentir puis exploser : le stop & go qui prend le défenseur à contre-pied.`,u:`Conduite solide`},
+   {id:'drb-feinte',n:'Feinte de corps',s:'lock',d:`Faire croire à une direction avec ton corps, partir de l'autre.`,u:`Conduite + équilibre`},
+   {id:'drb-crochets',n:'Crochets (int./ext.)',s:'lock',d:`Couper le ballon sur le côté pour changer d'axe sec.`,u:`Conduite + maîtrise au sol`},
+   {id:'drb-rateau',n:'Passement de jambe',s:'lock',d:`Le râteau / step-over : enrouler la jambe autour du ballon pour feinter.`,u:`Maîtrise au sol`},
+   {id:'drb-pont',n:'Petit pont',s:'lock',d:`Passer le ballon entre les jambes du défenseur. L'humiliation propre.`,u:`Timing + conduite`},
+   {id:'drb-elastique',n:'Élastique (flip-flap)',s:'lock',d:`Pousser le ballon d'un côté avec l'extérieur, le ramener sec de l'intérieur.`,u:`Maîtrise au sol avancée`},
+   {id:'drb-1v1',n:'1v1 — éliminer son défenseur',s:'lock',d:`Ton arme signature à venir : passer ton homme en duel. Ce que tu rêves de faire.`,u:`Crochets + changement de rythme`},
+   {id:'drb-vitesse',n:'Dribble à haute vitesse',s:'lock',d:`Garder le contrôle balle au pied en pleine course.`,u:`Conduite solide`},
+   {id:'drb-roulette',n:'Roulette',s:'lock',d:`Pivoter sur le ballon avec les deux semelles pour effacer l'adversaire.`,u:`Maîtrise au sol avancée`},
+   {id:'drb-sombrero',n:'Sombrero / arc-en-ciel',s:'lock',d:`Faire passer le ballon par-dessus le défenseur. Le geste flash.`,u:`Maîtrise au sol experte`}
+ ]},
+ {name:'Pied faible',nodes:[
+   {id:'pf-controle',n:'Gauche : contrôle',s:'prog',p:20,d:`Amortir et orienter du gauche sans y penser. Le sillon se creuse pendant qu'il est facile.`},
+   {id:'pf-passe',n:'Gauche : passe',s:'prog',p:20,d:`Passe propre de l'intérieur du gauche, au mur. Précision avant puissance.`},
+   {id:'pf-frappe',n:'Gauche : frappe',s:'prog',p:10,d:`Frapper ferme du gauche. Tu copies la sensation de ton droit, lentement.`},
+   {id:'pf-dribble',n:'Gauche : dribble',s:'lock',d:`Conduire et crocheter du gauche aussi bien que du droit.`,u:`Conduite droite + gauche contrôle`},
+   {id:'pf-bipede',n:'Vrai bipède',s:'lock',d:`Les deux pieds quasi égaux : plus aucun côté faible. Ton objectif final.`,u:`Tous les fondamentaux gauche éveillés`}
+ ]},
+ {name:'Vision & jeu',nodes:[
+   {id:'vis-scan',n:'Scan / tête haute',s:'awk',d:`Tu lèves déjà la tête et tu balaies le terrain. Un réflexe que beaucoup n'ont jamais.`},
+   {id:'vis-lecture',n:'Lecture du jeu',s:'awk',d:`Tu vois les espaces et les coups avant qu'ils arrivent.`},
+   {id:'vis-instinct',n:'Instinct / créativité',s:'awk',d:`Ta signature. Réflexes, surprise, solutions inattendues : roi en match. À nourrir, jamais à brider.`},
+   {id:'vis-passe',n:'Dernière passe',s:'lock',d:`Le ballon décisif qui met un coéquipier seul.`,u:`Passe précise des deux pieds`},
+   {id:'vis-combine',n:'Jeu combiné (une-deux)',s:'lock',d:`Donner-et-suivre pour casser une ligne.`,u:`Passe + appel`},
+   {id:'vis-but',n:'Sens du but / placement',s:'lock',d:`Être à la bonne place au bon moment dans la surface.`,u:`Vision + finition`}
+ ]},
+ {name:'Mental',nodes:[
+   {id:'men-deliberee',n:'Pratique délibérée',s:'prog',p:40,d:`Tu l'as comprise seul : construire lentement et en conscience pour jouer vite à l'instinct.`},
+   {id:'men-impatience',n:'Gérer l\u2019impatience',s:'prog',p:35,d:`Ton impatience est un signal d'arrêt, pas un mur à forcer. Un mot avant chaque geste.`},
+   {id:'men-peur',n:'Vaincre la peur',s:'prog',p:50,d:`La peur de te taper la pointe au sol. Tu la bats en partant des frappes en l'air.`},
+   {id:'men-concentration',n:'Concentration en match',s:'lock',d:`Tenir ton focus quand ça compte, malgré une attention qui varie.`,u:`Pratique délibérée ancrée`},
+   {id:'men-sangfroid',n:'Sang-froid devant le but',s:'lock',d:`Garder la tête froide face au gardien.`,u:`Confiance + finition`}
+ ]}
+];
+
+const LEGENDS=[
+ {id:'isagi',name:'Isagi Yoichi',mono:'IS',color:'#3B82F6',style:'Vision spatiale',
+  conseil:`Vois le terrain comme une grille, pas comme un chaos. Anticipe où le ballon VA être, pas où il est. Ton avantage, c'est ton cerveau : entraîne-toi à scanner avant de recevoir, et à toujours te demander « où est l'espace libre ? ».`,
+  tech:`Le placement pour le rebond : quand le gardien repousse, sois déjà là où le ballon retombe, et finis en une touche.`},
+ {id:'bachira',name:'Bachira Meguru',mono:'BA',color:'#2DD4BF',style:'Dribble créatif',
+  conseil:`Dribble avec JOIE, pas avec un plan rigide. L'imprévisible vient du plaisir de jouer, pas du calcul. Quand tu t'amuses balle au pied, ton défenseur ne peut plus te lire — c'est exactement ton profil créatif.`,
+  tech:`Le dribble proche : ballon collé au pied, petite feinte de corps, puis changement de direction sec en 1v1.`},
+ {id:'rin',name:'Rin Itoshi',mono:'RN',color:'#4F46E5',style:'Finition froide',
+  conseil:`La finition complète et sans émotion. Entraîne TOUTES tes frappes jusqu'à ce qu'aucune situation ne te surprenne dans la surface. Devant le but, zéro panique : exécution pure, comme une machine.`,
+  tech:`La frappe instantanée : armer et frapper en une seule touche, sans contrôle préalable.`},
+ {id:'shidou',name:'Shidou Ryusei',mono:'SH',color:'#F43F5E',style:'Chaos acrobatique',
+  conseil:`Marque depuis N'IMPORTE quelle position. Ton corps doit pouvoir frapper à tout angle — et ça, tu as déjà la fibre avec tes volées. Laisse ton instinct chercher le but, même dans les positions impossibles.`,
+  tech:`Le retourné / la volée acrobatique : frappe un ballon haut au-dessus de toi, corps en l'air.`},
+ {id:'nagi',name:'Nagi Seishiro',mono:'NA',color:'#A855F7',style:'Contrôle parfait',
+  conseil:`Ton premier touché change tout. Un contrôle parfait te donne le temps et l'espace que les autres n'ont pas. Bosse le trapping jusqu'à pouvoir tuer n'importe quel ballon, du sol comme de l'air.`,
+  tech:`Le contrôle-frappe : amortir un ballon aérien et enchaîner direct la frappe, sans temps mort.`},
+ {id:'barou',name:'Barou Shouei',mono:'BR',color:'#F59E0B',style:'Le roi de la surface',
+  conseil:`Dans la surface, c'est TOI le roi : c'est toi qui décides, pas le défenseur. L'égoïsme assumé du buteur est une force — quand le ballon arrive, tu ne demandes la permission à personne.`,
+  tech:`Le jeu dos au but : protéger le ballon de ton corps, puis se retourner et frapper en force.`},
+ {id:'chigiri',name:'Chigiri Hyoma',mono:'CH',color:'#FB7185',style:'Vitesse pure',
+  conseil:`La vitesse n'est une arme que si tu gardes le ballon. Beaucoup courent vite et perdent la balle. Entraîne la conduite EN pleine course, pas juste le sprint à vide.`,
+  tech:`Le dribble lancé : pousser le ballon dans l'espace et exploser pour passer le défenseur par la vitesse.`},
+ {id:'kunigami',name:'Kunigami Rensuke',mono:'KU',color:'#FB923C',style:'Le héros travailleur',
+  conseil:`Le talent se rattrape par le TRAVAIL. La régularité bat le génie inconstant — c'est le joueur qui s'entraîne tous les jours, même sans envie, qui finit devant. Ta constance est ton super-pouvoir.`,
+  tech:`La frappe lourde de loin : armer une frappe puissante et tendue de 20-25 mètres.`},
+ {id:'hiori',name:'Hiori Yo',mono:'HI',color:'#38BDF8',style:'Lecteur de jeu',
+  conseil:`Lis les schémas du jeu deux temps à l'avance. L'intelligence vaut la vitesse : si tu vois la passe avant les autres, tu es toujours en avance. Ton cerveau analytique, c'est ton arme — fais-lui confiance.`,
+  tech:`La passe dans l'intervalle : trouver le coéquipier entre les lignes adverses.`},
+ {id:'sae',name:'Sae Itoshi',mono:'SA',color:'#818CF8',style:'Le meilleur du monde',
+  conseil:`La maîtrise TOTALE : contrôle, passe, vision, frappe — tout à un niveau où le jeu ralentit pour toi. C'est le sommet, celui qui se mérite après des années. Vise-le, mais sache que c'est le bout du chemin.`,
+  tech:`La passe parfaite + l'orchestration : ne pas juste finir l'action, mais diriger tout le jeu autour de toi.`}
+];
+
+const BLOCS=[
+ {t:'Bloc tir',dur:'~35 min',key:`Orteils en bas comme ta reprise — cheville raide, lacets, milieu du ballon.`,keyMag:false,
+  steps:[
+   {h:'Échauffer les jambes — 8 min',x:`Footing, chevilles, hanches, puis frappes douces qui montent. Insiste sur l'intérieur des cuisses. Jamais de grosse frappe à froid.`},
+   {h:'Ballon immobile, petites poussées — 6 min',x:`Commence par le gauche, frais. Tu pousses le ballon 2-3 m du dessus du pied : bonne surface + cheville raide. Alterne droit/gauche.`},
+   {h:'Frapper en l\u2019air — 6 min',x:`Tu lâches le ballon de tes mains et tu le frappes avant qu'il touche le sol. Pas de sol = pas de pointe.`},
+   {h:'Frapper de plus en plus bas — 5 min',x:`Tu le laisses rebondir, de moins en moins haut, jusqu'à presque le sol. Même pied à chaque étape.`},
+   {h:'Ballon posé au sol — 8 min',x:`Le vrai test. Autre pied à côté, penché au-dessus, milieu du ballon. Vise ton sac. Précision, pas puissance.`},
+   {h:'S\u2019étirer — 3-5 min',x:`Doux, surtout l'intérieur des cuisses.`}
+  ]},
+ {t:'Bloc jonglage',dur:'~13 min',key:`Compte seulement le max PROPRE. Lacets, hauteur ceinture, lâcher-jongle.`,keyMag:true,
+  steps:[
+   {h:'Allumage — 3 min',x:`Jonglage facile, deux pieds, sans compter.`},
+   {h:'Droit seul — 3 min',x:`Cible : 5 propres. Passé 10, le rythme clique.`},
+   {h:'Gauche seul — 3 min',x:`Priorité. Cible : 2 propres. Chaque jongle gauche = vraie victoire.`},
+   {h:'Alterné — 3 min',x:`Pousse au-delà de ton record.`},
+   {h:'Note tes 3 chiffres — 1 min',x:`Max propre par catégorie. L'écart D↔G = ton ambidextrie.`}
+  ]},
+ {t:'Bloc conduite',dur:'~16 min',key:`Le ballon reste collé à ton pied. Tout des deux pieds.`,keyMag:false,
+  steps:[
+   {h:'Ballon entre tes pieds — 4 min',x:`Tu pousses doucement le ballon d'un intérieur de pied à l'autre, sur place.`},
+   {h:'Rouler avec le dessous du pied — 3 min',x:`Tu poses la plante sur le dessus du ballon et tu le fais rouler d'un pied à l'autre.`},
+   {h:'Marcher en poussant le ballon — 6 min',x:`Petites poussées à chaque pas, le ballon reste juste devant toi. C'est conduire.`},
+   {h:'Plus vite — 3 min',x:`Tu accélères quand tu te sens à l'aise. Le ballon ne s'éloigne jamais.`}
+  ]}
+];
+
+const RAPPELS=[
+ {t:'Frappe au sol',key:`Orteils en bas, comme ma reprise.`,keyMag:false,
+  b:[`Dessus du pied (lacets), jamais la pointe.`,`Cheville raide, pied dur comme une planche — surtout à gauche.`,`Autre pied à côté du ballon, pointe vers la cible.`,`Penché en avant, poitrine au-dessus → ballon bas.`,`Tape le milieu du ballon, pas en-dessous.`,`Pas de risque de pointe : le ballon est entre ton pied et le sol.`,`Descendre : reprise → rebond de plus en plus bas → ballon posé, même pied.`]},
+ {t:'Mental',key:`Je construis lentement pour jouer vite.`,keyMag:true,
+  b:[`Un geste neuf n'est pas automatique : tir à l'instinct = vieux réflexe, zéro apprentissage.`,`Un mot avant chaque frappe (ex : « orteils en bas »).`,`Bloc concentré court (~10 min), puis bloc libre à l'instinct.`,`Impatience = signal d'arrêt. Une rep impatiente vaut moins que pas de rep.`,`L'instinct est la destination, pas le départ. En match, il est roi.`]},
+ {t:'Pied gauche',key:`Copier le droit, un paramètre à la fois.`,keyMag:false,
+  b:[`Frappe lente du droit → sens la bonne surface → recopie sur le gauche.`,`D'abord la surface, puis la cheville raide, puis le corps penché.`,`Ballon immobile d'abord : pas de timing à gérer.`,`Le gauche est prioritaire — minimum 50/50, voire plus.`]}
+];
+
+/* storage */
+const KEY='ego-yacine-v1';
+let store={progress:{},numbers:[{date:'Départ',jD:3,jG:1,jA:5}],sessions:[],players:{}};
+function load(){try{const raw=localStorage.getItem(KEY);if(raw){const v=JSON.parse(raw);if(v&&typeof v==='object'){store.progress=v.progress||{};store.numbers=(Array.isArray(v.numbers)&&v.numbers.length)?v.numbers:store.numbers;store.sessions=Array.isArray(v.sessions)?v.sessions:[];store.players=v.players||{};}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+const KKEY='ego-gemini-key';
+function getKey(){try{return localStorage.getItem(KKEY)||'';}catch(e){return '';}}
+function setKey(k){try{if(k)localStorage.setItem(KKEY,k);else localStorage.removeItem(KKEY);}catch(e){}}
+
+function liveTree(){return BASE.map(br=>({name:br.name,nodes:br.nodes.map(nd=>{const o=store.progress[nd.id];let s=nd.s,p=nd.p;if(o){if(o.s)s=o.s;if(typeof o.p==='number')p=o.p;}return Object.assign({},nd,{s,p});})}));}
+function nIcon(s){if(s==='awk')return '<span class="node__ic">'+ICON.spark+'</span>';if(s==='lock')return '<span class="node__ic">'+ICON.lock+'</span>';return '';}
+
+function renderTree(){
+  const tree=document.getElementById('tree');tree.innerHTML='';
+  const T=liveTree();let awk=0,prog=0,lock=0,sum=0,total=0;
+  T.forEach((br,bi)=>{
+    const col=document.createElement('div');col.className='branch';
+    let h='<div class="branch__head"><span class="branch__idx">'+(bi+1)+'</span><span class="branch__name">'+br.name+'</span></div><div class="nodes">';
+    br.nodes.forEach((nd,ni)=>{
+      total++;if(nd.s==='awk'){awk++;sum+=100;}else if(nd.s==='prog'){prog++;sum+=(nd.p||0);}else lock++;
+      const right=nd.s==='prog'?'<span class="node__pct">'+nd.p+'%</span>':nIcon(nd.s);
+      const bar=nd.s==='prog'?'<div class="node__bar"><i style="width:'+nd.p+'%"></i></div>':'';
+      h+='<button class="node node--'+nd.s+'" data-b="'+bi+'" data-n="'+ni+'" aria-label="'+nd.n+' — '+SL[nd.s]+'"><div class="node__top"><span class="node__name">'+nd.n+'</span>'+right+'</div>'+bar+'</button>';
+    });
+    h+='</div>';col.innerHTML=h;tree.appendChild(col);
+  });
+  const g=Math.round(sum/total);
+  document.getElementById('gfill').style.width=g+'%';document.getElementById('gpct').textContent=g+'%';
+  document.getElementById('gcounts').innerHTML='<b>'+awk+'</b> éveillées · <b>'+prog+'</b> en cours · <b>'+lock+'</b> verrouillées';
+  tree.querySelectorAll('.node').forEach(btn=>btn.addEventListener('click',()=>{const nd=T[+btn.dataset.b].nodes[+btn.dataset.n];openSkill({tag:T[+btn.dataset.b].name,name:nd.n,s:nd.s,p:nd.p,d:nd.d,u:nd.u});}));
+}
+function renderBlocs(){const el=document.getElementById('blocs');el.innerHTML='';BLOCS.forEach(b=>{let s='<div class="card-block"><h3>'+b.t+'<span class="dur">'+b.dur+'</span></h3><div class="keyline'+(b.keyMag?' mag':'')+'"><b>Clé.</b> '+b.key+'</div><ol class="steps">';b.steps.forEach(st=>{s+='<li><span class="t">'+st.h+'</span><br>'+st.x+'</li>';});s+='</ol></div>';el.innerHTML+=s;});}
+function renderRappels(){const el=document.getElementById('rappels');el.innerHTML='';RAPPELS.forEach(r=>{let s='<div class="card-block"><h3>'+r.t+'</h3><div class="keyline'+(r.keyMag?' mag':'')+'"><b>'+r.key+'</b></div><ul class="bullets">';r.b.forEach(x=>{s+='<li>'+x+'</li>';});s+='</ul></div>';el.innerHTML+=s;});}
+
+function renderLegends(){
+  const grid=document.getElementById('legends');grid.innerHTML='';
+  const nU=LEGENDS.filter(l=>store.players[l.id]).length;
+  document.getElementById('legIntro').innerHTML='<b style="color:var(--gold-soft)">'+nU+' / '+LEGENDS.length+' débloquées.</b> EGO peut en débloquer une dans son rapport, seulement si une séance le mérite vraiment. Chaque légende te livre alors son conseil clé et sa technique signature.';
+  LEGENDS.forEach((l,i)=>{
+    const un=!!store.players[l.id];
+    const b=document.createElement('button');b.className='leg'+(un?' unlocked':'');b.dataset.i=i;
+    const crestBg=un?l.color:'#16203a';const crestTxt=un?'#fff':'#3a4a6e';
+    const inner=un?l.mono:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+    b.innerHTML='<span class="lk">'+(un?'★':ICON.lock)+'</span><div class="crest" style="background:'+crestBg+';color:'+crestTxt+'">'+inner+'</div><div class="leg__name">'+(un?l.name:'? ? ?')+'</div><div class="leg__style">'+(un?l.style:'Verrouillé')+'</div>';
+    grid.appendChild(b);
+  });
+  grid.querySelectorAll('.leg').forEach(btn=>btn.addEventListener('click',()=>openLegend(LEGENDS[+btn.dataset.i])));
+}
+
+function renderStats(){
+  const last=store.numbers[store.numbers.length-1]||{jD:0,jG:0,jA:0};
+  const gap=Math.abs((last.jD||0)-(last.jG||0));
+  document.getElementById('stats').innerHTML='<div class="stat"><div class="v">'+(last.jD||0)+'</div><div class="l">Droit</div></div><div class="stat"><div class="v">'+(last.jG||0)+'</div><div class="l">Gauche</div></div><div class="stat"><div class="v">'+(last.jA||0)+'</div><div class="l">Alterné</div></div><div class="stat gap"><div class="v">'+gap+'</div><div class="l">Écart D↔G</div></div>';
+  const hist=document.getElementById('hist');
+  if(!store.sessions.length){hist.innerHTML='<div class="empty">Aucune séance enregistrée. Raconte ta première séance ci-dessus.</div>';return;}
+  hist.innerHTML='';store.sessions.slice().reverse().slice(0,8).forEach(se=>{const d=document.createElement('div');d.className='hist__item';const rp=cleanRapport(se.rapport||'');d.innerHTML='<div class="hist__d">'+(se.date||'')+'</div>'+rp.slice(0,160)+(rp.length>160?'…':'');hist.appendChild(d);});
+}
+
+/* overlay */
+const overlay=document.getElementById('overlay'),ocard=document.getElementById('ocard'),ocBody=document.getElementById('ocBody');
+let lastFocus=null;
+function badge(s){const ic=s==='awk'?ICON.spark:s==='lock'?ICON.lock:'';return '<span class="badge badge--'+s+'">'+ic+SL[s]+'</span>';}
+function show(){overlay.classList.add('show');document.getElementById('ocClose').focus();}
+function openSkill(o){lastFocus=document.activeElement;ocard.classList.remove('gold');
+  let bar=o.s==='prog'?'<div class="ocard__bar"><i id="ocbi"></i></div>':'';
+  let unl=o.u?'<div class="ocard__unlock"><b>Pour débloquer</b>'+o.u+'</div>':'';
+  ocBody.innerHTML='<div class="ocard__tag">'+(o.tag||'Compétence')+'</div><h3 class="ocard__name" id="ocName">'+o.name+'</h3>'+badge(o.s)+bar+'<p class="ocard__desc">'+o.d+'</p>'+unl;
+  show();if(o.s==='prog')setTimeout(()=>{const b=document.getElementById('ocbi');if(b)b.style.width=o.p+'%';},50);}
+function openLegend(l){lastFocus=document.activeElement;const un=!!store.players[l.id];
+  if(!un){ocard.classList.remove('gold');ocBody.innerHTML='<div class="ocard__tag">Salle des Légendes</div><h3 class="ocard__name" id="ocName">Légende verrouillée</h3><span class="badge badge--lock">'+ICON.lock+'Verrouillé</span><p class="ocard__desc">Cette légende se débloque quand EGO estime, dans un rapport de séance, que tu l\u2019as mérité par un vrai déblocage. Continue à bosser — elle t\u2019attend.</p>';show();return;}
+  ocard.classList.add('gold');
+  ocBody.innerHTML='<div class="lego-head"><div class="lego-crest" style="background:'+l.color+';color:#fff">'+l.mono+'</div><div><h3 class="ocard__name" id="ocName" style="margin:0">'+l.name+'</h3><div class="lego-sub">'+l.style+'</div></div></div>'
+   +'<div class="lego-block"><div class="lab">'+ICON.bulb+'Conseil clé</div><p>'+l.conseil+'</p></div>'
+   +'<div class="lego-block"><div class="lab">'+ICON.target+'Technique à travailler</div><p>'+l.tech+'</p></div>';
+  show();}
+function closeDetail(){overlay.classList.remove('show');if(lastFocus)lastFocus.focus();}
+document.getElementById('coreNode').addEventListener('click',()=>openSkill(CORE));
+document.getElementById('ocClose').addEventListener('click',closeDetail);
+overlay.addEventListener('click',e=>{if(e.target===overlay)closeDetail();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('show'))closeDetail();});
+
+/* nav */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));t.classList.add('on');document.getElementById('v-'+t.dataset.v).classList.add('on');}));
+
+/* AI */
+function buildPrompt(text){
+  const T=liveTree();let list='';T.forEach(br=>br.nodes.forEach(nd=>{list+='- '+nd.id+' | '+nd.n+' | '+SL[nd.s]+(nd.s==='prog'?' '+nd.p+'%':'')+'\n';}));
+  const locked=LEGENDS.filter(l=>!store.players[l.id]);let pl='';locked.forEach(l=>{pl+='- '+l.id+' | '+l.name+' | '+l.style+'\n';});
+  const last=store.numbers[store.numbers.length-1]||{jD:0,jG:0,jA:0};
+  return `Tu es EGO, le coach de football personnel de Yacine, dans l'esprit d'Ego de Blue Lock : intense mais constructif, direct, zéro flatterie vide, taillé sur ses points forts. Tu le tutoies.
+
+CONTEXTE : Yacine, 19 ans, débutant autodidacte, attaquant créatif (vision et instinct devant la technique — "cerveau devant les pieds"). Droitier, construit son pied gauche (ambidextrie). Chantier principal : frappe au sol des deux pieds. Sa clé : "orteils en bas comme sa reprise, cheville raide, milieu du ballon". Mental : concentration variable, impatient, instinct puissant. Principe : construire lentement en conscience pour jouer vite à l'instinct.
+
+COMPÉTENCES (id | nom | état | %) :
+${list}
+CHIFFRES JONGLAGE : droit ${last.jD}, gauche ${last.jG}, alterné ${last.jA}.
+
+LÉGENDES ENCORE VERROUILLÉES (id | nom | style) :
+${pl||'(toutes débloquées)'}
+SÉANCE RACONTÉE :
+"""${text}"""
+
+MISSION :
+1) Rapport court et percutant (3-5 phrases) en style EGO : crédite les vrais progrès mérités, pointe honnêtement ce qui coince, relie à son profil, reste constructif.
+2) Mets à jour ses données : ajuste UNIQUEMENT les % des compétences réellement travaillées, par petits incréments réalistes (+3 à +15 max). Une compétence "prog" qui atteint 100 devient "awk". Une "lock" clairement abordée peut passer "prog" à un petit %.
+3) Si de nouveaux chiffres de jonglage sont mentionnés, renvoie-les (sinon null).
+4) Une consigne de focus (1 phrase).
+5) DÉBLOCAGE DE LÉGENDE : tu peux débloquer AU MAXIMUM une légende, et SEULEMENT pour un vrai déblocage / une maîtrise / un effort ou une compréhension exceptionnels. C'est RARE et ça se mérite — la plupart des séances ne débloquent personne (unlock_player=null). Si tu débloques, choisis la légende dont le style colle le mieux à ce qu'il vient d'accomplir, parmi les verrouillées listées.
+
+RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte ni backticks autour. Format EXACT :
+{"rapport":"...","updates":[{"id":"frp-sol-g","etat":"prog","pct":20}],"chiffres":{"jD":null,"jG":null,"jA":null},"focus":"...","unlock_player":null}
+Mets null pour tout chiffre non mentionné. "updates" peut être []. unlock_player = un id de la liste verrouillée, ou null.`;
+}
+function applyUpdates(parsed){
+  const tags=[];const idName={};BASE.forEach(br=>br.nodes.forEach(nd=>idName[nd.id]=nd.n));
+  if(Array.isArray(parsed.updates))parsed.updates.forEach(u=>{
+    if(!u||!u.id||!idName[u.id])return;const cur=store.progress[u.id]||{};
+    let p=typeof u.pct==='number'?Math.max(0,Math.min(100,Math.round(u.pct))):cur.p;let s=u.etat||cur.s;
+    if(typeof p==='number'&&p>=100)s='awk';else if(typeof p==='number'){if(!s||s==='lock')s='prog';}
+    store.progress[u.id]={s,p};tags.push(idName[u.id]+': '+(typeof p==='number'?p+'%':SL[s]||''));
+  });
+  const ch=parsed.chiffres||{};const last=store.numbers[store.numbers.length-1]||{jD:0,jG:0,jA:0};
+  const nD=(typeof ch.jD==='number')?ch.jD:null,nG=(typeof ch.jG==='number')?ch.jG:null,nA=(typeof ch.jA==='number')?ch.jA:null;
+  if(nD!==null||nG!==null||nA!==null)store.numbers.push({date:dateStr(),jD:nD!==null?nD:last.jD,jG:nG!==null?nG:last.jG,jA:nA!==null?nA:last.jA});
+  let unlocked=null;
+  if(parsed.unlock_player){const lg=LEGENDS.find(l=>l.id===parsed.unlock_player);if(lg&&!store.players[lg.id]){store.players[lg.id]=true;unlocked=lg;}}
+  return {tags,unlocked};
+}
+function dateStr(){return new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}
+
+async function egoFetch(prompt){
+  const key=getKey();
+  if(!key)throw {nokey:true};
+  let last=0;
+  for(let i=0;i<3;i++){
+    if(i>0)await new Promise(r=>setTimeout(r,700*i));
+    let res;
+    try{res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.85,maxOutputTokens:4096,responseMimeType:"application/json",thinkingConfig:{thinkingBudget:1024}}})});}
+    catch(net){last=0;continue;}
+    last=res.status;
+    if(res.ok)return await res.json();
+    if(res.status>=400&&res.status<500&&res.status!==429)break;
+  }
+  throw {status:last};
+}
+const genBtn=document.getElementById('genBtn');
+genBtn.addEventListener('click',async()=>{
+  const text=document.getElementById('sessionInput').value.trim();const err=document.getElementById('errBox');err.classList.remove('show');
+  if(text.length<10){err.textContent='Raconte un peu plus ta séance pour un vrai rapport.';err.classList.add('show');return;}
+  if(!getKey()){err.textContent='Ajoute d\u2019abord ta clé Gemini en haut (bouton OK), puis réessaie.';err.classList.add('show');document.getElementById('apiKey').focus();return;}
+  genBtn.disabled=true;genBtn.classList.add('loading');genBtn.querySelector('.lbl').textContent='EGO analyse…';
+  try{
+    const data=await egoFetch(buildPrompt(text));
+    let raw='';try{raw=((((data.candidates||[])[0]||{}).content||{}).parts||[]).map(p=>p.text||'').join('');}catch(_e){raw='';}
+    let clean=raw.replace(/```json/gi,'').replace(/```/g,'').trim();const a=clean.indexOf('{'),z=clean.lastIndexOf('}');if(a>=0&&z>a)clean=clean.slice(a,z+1);
+    let parsed;try{parsed=JSON.parse(clean);}catch(e){parsed={rapport:raw||'Réponse illisible, réessaie.',updates:[],chiffres:{},focus:'',unlock_player:null};}
+    const {tags,unlocked}=applyUpdates(parsed);
+    store.sessions.push({date:dateStr(),input:text,rapport:parsed.rapport||'',focus:parsed.focus||''});
+    await save();renderTree();renderStats();renderLegends();
+    document.getElementById('reportTxt').textContent=cleanRapport(parsed.rapport||'');
+    const ub=document.getElementById('unlockBox');
+    ub.innerHTML=unlocked?'<div class="unlock-banner"><span class="ub-ic">'+ICON.spark+'</span><div><div class="ub-t">Légende débloquée</div><div class="ub-n">'+unlocked.name+'</div></div></div>':'';
+    const up=document.getElementById('updates');up.innerHTML='';tags.forEach(t=>{const s=t.split(': ');up.innerHTML+='<span class="upd">'+s[0]+' <span class="ar">→</span> '+(s[1]||'')+'</span>';});
+    document.getElementById('reportFocus').innerHTML=parsed.focus?'<b>Focus prochaine séance</b>'+parsed.focus:'';
+    document.getElementById('report').classList.add('show');
+    document.getElementById('report').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){
+    let m='EGO n\u2019a pas pu se connecter. Vérifie ta connexion et réessaie.';
+    if(e&&e.nokey)m='Ajoute d\u2019abord ta clé Gemini en haut, puis réessaie.';
+    else if(e&&e.status===429)m='Quota Gemini atteint (10 req/min en gratuit) — attends ~30 s et réessaie.';
+    else if(e&&e.status===400)m='Erreur 400 : ta clé est peut-être mal collée. Revérifie-la.';
+    else if(e&&e.status===403)m='Erreur 403 : clé refusée. Vérifie qu\u2019elle est active et restreinte à l\u2019API Gemini.';
+    else if(e&&e.status>=500)m='Service Gemini momentanément indisponible — réessaie dans un instant.';
+    else if(e&&e.status>=400)m='Erreur '+e.status+'. Dis-le-moi avec ce numéro si ça persiste.';
+    err.textContent=m;err.classList.add('show');
+  }
+  finally{genBtn.disabled=false;genBtn.classList.remove('loading');genBtn.querySelector('.lbl').textContent='Générer le rapport';}
+});
+
+function refreshKeyStatus(){const s=document.getElementById('keyStatus');if(getKey()){s.textContent='Clé enregistrée — tu peux générer ton rapport.';s.className='keybox__status ok';}else{s.textContent='Pas encore de clé. Colle ta clé Gemini pour activer le rapport IA.';s.className='keybox__status';}}
+document.getElementById('saveKey').addEventListener('click',()=>{setKey(document.getElementById('apiKey').value.trim());refreshKeyStatus();});
+document.getElementById('apiKey').addEventListener('keydown',e=>{if(e.key==='Enter'){setKey(e.target.value.trim());refreshKeyStatus();}});
+(function(){load();const k=getKey();if(k)document.getElementById('apiKey').value=k;refreshKeyStatus();renderTree();renderBlocs();renderRappels();renderLegends();renderStats();})();
+</script>
+</body>
+</html>
